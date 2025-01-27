@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { SQLiteProvider } from "expo-sqlite";
+import { SQLiteDatabase, SQLiteProvider } from "expo-sqlite";
 
 // Crear el Tab Navigator
 const Tab = createBottomTabNavigator();
@@ -20,19 +20,32 @@ function GastosScreen() {
 }
 
 
-// Crear la base de datos si no existe
-const crearDbsiNoExiste = async (db) => {
-  db.transaction((tx) => {
-    tx.executeSql(
-      "CREATE TABLE IF NOT EXISTS presupuestos (id INTEGER PRIMARY KEY AUTOINCREMENT, nombre TEXT, ingreso REAL, categorias TEXT)"
-    );
-    tx.executeSql(
-      "CREATE TABLE IF NOT EXISTS gastos (id INTEGER PRIMARY KEY AUTOINCREMENT, nombre TEXT, cantidad REAL, categoria TEXT)"
-    );
-  });
-};
-
 export default function App() {
+
+  const crearDbsiNoExiste = async (db) => {
+    // Crear la tabla de presupuestos si no existe
+    const presupuestos = await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS presupuestos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nombre TEXT NOT NULL,
+        ingreso REAL NOT NULL,
+        categorias TEXT NOT NULL
+      );
+    `);
+
+    // Crear la tabla de gastos si no existe
+    const gastos = await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS gastos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        presupuesto_id INTEGER NOT NULL,
+        nombre TEXT NOT NULL,
+        monto REAL NOT NULL,
+        fecha TEXT NOT NULL,
+        FOREIGN KEY (presupuesto_id) REFERENCES presupuestos(id)
+      );
+    `);
+  };
+
   return (
     <SQLiteProvider databaseName="presupuestos.db" onInit={crearDbsiNoExiste}> 
     <NavigationContainer>

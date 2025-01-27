@@ -1,34 +1,37 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, FlatList, Text, TouchableOpacity, Modal, TextInput, StyleSheet, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import { SQLiteProvider } from 'expo-sqlite';
+import * as SQLite from 'expo-sqlite';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function MisPresupuestos({ navigation }) {
+
   const [presupuestos, setPresupuestos] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
-  const [nuevoPresupuesto, setNuevoPresupuesto] = useState({ nombre: '', ingreso: '', categorias: '' });
+  const [nuevoPresupuesto, setNuevoPresupuesto] = useState({id: '', nombre: '', ingreso: '', categorias: '' });
+  
+  const db = SQLite.useSQLiteContext();
 
-  const agregarPresupuesto = () => {
+  // Obtener los presupuestos de la base de datos
+
+  // Agregar un presupuesto a la base de datos
+  const agregarPresupuesto = async () => {
     if (!nuevoPresupuesto.nombre || !nuevoPresupuesto.ingreso || !nuevoPresupuesto.categorias) {
       Alert.alert('Error', 'No se puede guardar un presupuesto vacío. Por favor, completa todos los campos.');
       return;
     }
-    setPresupuestos([...presupuestos, { ...nuevoPresupuesto, id: Date.now().toString() }]);
-    setModalVisible(false);
-    setNuevoPresupuesto({ nombre: '', ingreso: '', categorias: '' });
-  };
 
-  const eliminarPresupuesto = (id) => {
-    setPresupuestos(presupuestos.filter((item) => item.id !== id));
-  };
-
-  const editarPresupuesto = (id) => {
-    const presupuesto = presupuestos.find((item) => item.id === id);
-    if (presupuesto) {
-      setNuevoPresupuesto(presupuesto);
-      setModalVisible(true);
     }
+
+
+  //Eliminar un presupuesto de la base de datos
+  const eliminarPresupuesto = (id) => {
+  };
+
+
+  //Editar un presupuesto de la base de datos
+  const editarPresupuesto = (id) => {
   };
 
   return (
