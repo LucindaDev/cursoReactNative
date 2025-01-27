@@ -1,28 +1,54 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, Image, Pressable} from 'react-native';
-import cat from './assets/cat.jpg'
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
+import { NavigationContainer } from "@react-navigation/native";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { SQLiteProvider } from "expo-sqlite";
 
-export default function App() {
+// Crear el Tab Navigator
+const Tab = createBottomTabNavigator();
+
+// Importar los componentes de las pantallas
+import MisPresupuestosScreen from "./screens/MisPresupuestosScreen";
+
+
+function GastosScreen() {
   return (
-    <View style={styles.container}>
-      <StatusBar style="light" />
-      <Image source={cat} style={{ 
-        width: 200, 
-        height: 220
-        }} />
-      <Text style={{color:'#fff'}}>LUCINDAPP</Text>
-      <Pressable style={{backgroundColor:'red', width: 150, height:150, borderRadius: 100, alignItems: 'center', justifyContent: 'center'}} onPress={() => alert('Hello World!')}>
-        <Text>Presiona aquí</Text>
-      </Pressable>
+    <View style={styles.screen}>
+      <Text>Gastos</Text>
     </View>
   );
 }
 
+
+// Crear la base de datos si no existe
+const crearDbsiNoExiste = async (db) => {
+  db.transaction((tx) => {
+    tx.executeSql(
+      "CREATE TABLE IF NOT EXISTS presupuestos (id INTEGER PRIMARY KEY AUTOINCREMENT, nombre TEXT, ingreso REAL, categorias TEXT)"
+    );
+    tx.executeSql(
+      "CREATE TABLE IF NOT EXISTS gastos (id INTEGER PRIMARY KEY AUTOINCREMENT, nombre TEXT, cantidad REAL, categoria TEXT)"
+    );
+  });
+};
+
+export default function App() {
+  return (
+    <SQLiteProvider databaseName="presupuestos.db" onInit={crearDbsiNoExiste}> 
+    <NavigationContainer>
+      <Tab.Navigator>
+        <Tab.Screen name="Mis Presupuestos" component={MisPresupuestosScreen} />
+        <Tab.Screen name="Gastos" component={GastosScreen} />
+      </Tab.Navigator>
+    </NavigationContainer>
+    </SQLiteProvider>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
-    backgroundColor: '#181C14',
-    alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
