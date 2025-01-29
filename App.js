@@ -2,14 +2,15 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { SQLiteDatabase, SQLiteProvider } from "expo-sqlite";
+// import { SQLiteProvider, openDatabaseAsync, execAsync } from "expo-sqlite";
+import { SQLiteProvider } from 'expo-sqlite';
+import * as SQLite from 'expo-sqlite';
 
 // Crear el Tab Navigator
 const Tab = createBottomTabNavigator();
 
 // Importar los componentes de las pantallas
 import MisPresupuestosScreen from "./screens/MisPresupuestosScreen";
-
 
 function GastosScreen() {
   return (
@@ -19,12 +20,20 @@ function GastosScreen() {
   );
 }
 
-
 export default function App() {
+  // Abrir o crear la base de datos
+  
+  const crearDbsiNoExiste = async () => {
+    const db = await SQLite.openDatabaseAsync("presupuestosdb.db");
 
-  const crearDbsiNoExiste = async (db) => {
+    if(!db) {
+      console.log('No se pudo abrir la base de datos');
+      return;
+    };
+
     // Crear la tabla de presupuestos si no existe
     const presupuestos = await db.execAsync(`
+      PRAGMA journal_mode = WAL;
       CREATE TABLE IF NOT EXISTS presupuestos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nombre TEXT NOT NULL,
@@ -35,6 +44,7 @@ export default function App() {
 
     // Crear la tabla de gastos si no existe
     const gastos = await db.execAsync(`
+      PRAGMA journal_mode = WAL;
       CREATE TABLE IF NOT EXISTS gastos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         presupuesto_id INTEGER NOT NULL,
@@ -47,13 +57,16 @@ export default function App() {
   };
 
   return (
-    <SQLiteProvider databaseName="presupuestos.db" onInit={crearDbsiNoExiste}> 
-    <NavigationContainer>
-      <Tab.Navigator>
-        <Tab.Screen name="Mis Presupuestos" component={MisPresupuestosScreen} />
-        <Tab.Screen name="Gastos" component={GastosScreen} />
-      </Tab.Navigator>
-    </NavigationContainer>
+    <SQLiteProvider databaseName="presupuestosdb.db" onInit={crearDbsiNoExiste}>
+      <NavigationContainer>
+        <Tab.Navigator>
+          <Tab.Screen
+            name="Mis Presupuestos"
+            component={MisPresupuestosScreen}
+          />
+          <Tab.Screen name="Gastos" component={GastosScreen} />
+        </Tab.Navigator>
+      </NavigationContainer>
     </SQLiteProvider>
   );
 }
