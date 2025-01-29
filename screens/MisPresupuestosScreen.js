@@ -18,6 +18,7 @@ export default function MisPresupuestos({ navigation }) {
   const [presupuestos, setPresupuestos] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [nuevoPresupuesto, setNuevoPresupuesto] = useState({
+    id: null,
     nombre: "",
     ingreso: "",
     categorias: "",
@@ -27,15 +28,9 @@ export default function MisPresupuestos({ navigation }) {
   
   const obtenerPresupuestos = async () => {
     try {
-      const result = await db.isInTransactionAsync(tx => {
-        return tx.executeSqlAsync(
-          "SELECT id, nombre, ingreso, categorias FROM presupuestos"
-        );
-      });
-  
-      const rows = result[0].rows._array;
-      console.log("obtenerPresupuestos", rows);
-      setPresupuestos(rows);
+      const result = await db.getAllAsync("SELECT id, nombre, ingreso, categorias FROM presupuestos");
+      console.log("obtenerPresupuestos", result);
+      setPresupuestos(result);
     } catch (error) {
       console.error("Error al obtener presupuestos:", error);
     }
@@ -49,50 +44,85 @@ export default function MisPresupuestos({ navigation }) {
   );
 
   // Agregar un presupuesto a la base de datos
-  const agregarPresupuesto = async () => {
+  const btnGuardar = async () => {
     if (
       !nuevoPresupuesto.nombre ||
       !nuevoPresupuesto.ingreso ||
       !nuevoPresupuesto.categorias
     ) {
-      Alert.alert(
-        "Error",
-        "No se puede guardar un presupuesto vacío. Por favor, completa todos los campos."
-      );
+      Alert.alert("Error", "Por favor, completa todos los campos.");
       return;
     }
 
     try {
-      db.runAsync(
-        "INSERT INTO presupuestos (nombre, ingreso, categorias) VALUES (?, ?, ?)",
-        [
-          nuevoPresupuesto.nombre,
-          nuevoPresupuesto.ingreso,
-          nuevoPresupuesto.categorias,
-        ]
-      );
-      console.log("Presupuesto guardado correctamente");
+      if (nuevoPresupuesto.id) {
+        await db.runAsync(
+          "UPDATE presupuestos SET nombre = ?, ingreso = ?, categorias = ? WHERE id = ?",
+          [
+            nuevoPresupuesto.nombre,
+            nuevoPresupuesto.ingreso,
+            nuevoPresupuesto.categorias,
+            nuevoPresupuesto.id,
+          ]
+        );
+        console.log("Presupuesto actualizado correctamente");
+      } else {
+        await db.runAsync(
+          "INSERT INTO presupuestos (nombre, ingreso, categorias) VALUES (?, ?, ?)",
+          [
+            nuevoPresupuesto.nombre,
+            nuevoPresupuesto.ingreso,
+            nuevoPresupuesto.categorias,
+          ]
+        );
+        console.log("Presupuesto guardado correctamente");
+      }
+
       setModalVisible(false);
-      setNuevoPresupuesto({ nombre: "", ingreso: "", categorias: "" });
+      setNuevoPresupuesto({ id: null, nombre: "", ingreso: "", categorias: "" });
       await obtenerPresupuestos();
     } catch (error) {
-      Alert.alert(
-        "Error",
-        "No se pudo guardar el presupuesto. Por favor, intenta nuevamente."
-      );
+      console.error("Error:", error);
+      Alert.alert("Error", "No se pudo guardar/actualizar el presupuesto.");
     }
   };
 
   //Eliminar un presupuesto de la base de datos
-  const eliminarPresupuesto = (id) => {};
+  const eliminarPresupuesto = (id) => {
+    Alert.alert(
+      "Eliminar presupuesto",
+      "¿Estás seguro que deseas eliminar este presupuesto?",
+      [
+        {
+          text: "Cancelar",
+          style: "cancel",
+        },
+        {
+          text: "Eliminar",
+          onPress: async () => {
+            try {
+              await db.runAsync("DELETE FROM presupuestos WHERE id = ?", [id]);
+              console.log("Presupuesto eliminado correctamente");
+              await obtenerPresupuestos();
+            } catch (error) {
+              console.error("Error al eliminar presupuesto:", error);
+            }
+          },
+        },
+      ]
+    );
+  };
 
-  //Editar un presupuesto de la base de datos
+  // Editar un presupuesto de la base de datos
   const editarPresupuesto = (id) => {
-    const presupuesto = presupuestos.find((item) => item.id === id);
-    if (presupuesto) {
-      setNuevoPresupuesto(presupuesto);
-      setModalVisible(true);
-    }
+    setModalVisible(true);
+    const presupuesto = presupuestos.find((p) => p.id === id);
+    setNuevoPresupuesto({
+      id: presupuesto.id,
+      nombre: presupuesto.nombre,
+      ingreso: presupuesto.ingreso.toString(), // Convertir ingreso a string
+      categorias: presupuesto.categorias,
+    });
   };
 
   return (
@@ -137,13 +167,6 @@ export default function MisPresupuestos({ navigation }) {
       />
 
       {/* Botón flotante */}
-
-      <TouchableOpacity
-        style={styles.botonFlotante2}
-        onPress={() => obtenerPresupuestos()}
-      >
-        <FontAwesome name="circle" size={50} color="black" />
-      </TouchableOpacity>
       <TouchableOpacity
         style={styles.botonFlotante}
         onPress={() => setModalVisible(true)}
@@ -168,7 +191,7 @@ export default function MisPresupuestos({ navigation }) {
             placeholderTextColor={"#666"}
             style={styles.input}
             keyboardType="numeric"
-            value={nuevoPresupuesto.ingreso}
+            value={nuevoPresupuesto.ingreso.toString()}
             onChangeText={(text) =>
               setNuevoPresupuesto({ ...nuevoPresupuesto, ingreso: text })
             }
@@ -185,7 +208,7 @@ export default function MisPresupuestos({ navigation }) {
           <View style={styles.botonContainer}>
             <TouchableOpacity
               style={styles.botonGuardar}
-              onPress={agregarPresupuesto}
+              onPress={btnGuardar}
             >
               <Text style={styles.botonTexto}>Guardar</Text>
             </TouchableOpacity>

@@ -23,16 +23,9 @@ function GastosScreen() {
 export default function App() {
   // Abrir o crear la base de datos
   
-  const crearDbsiNoExiste = async () => {
-    const db = await SQLite.openDatabaseAsync("presupuestosdb.db");
-
-    if(!db) {
-      console.log('No se pudo abrir la base de datos');
-      return;
-    };
-
+  const crearDbsiNoExiste = async (db) => {
     // Crear la tabla de presupuestos si no existe
-    const presupuestos = await db.execAsync(`
+    await db.execAsync(`
       PRAGMA journal_mode = WAL;
       CREATE TABLE IF NOT EXISTS presupuestos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -43,7 +36,7 @@ export default function App() {
     `);
 
     // Crear la tabla de gastos si no existe
-    const gastos = await db.execAsync(`
+    await db.execAsync(`
       PRAGMA journal_mode = WAL;
       CREATE TABLE IF NOT EXISTS gastos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
