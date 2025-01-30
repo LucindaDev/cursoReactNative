@@ -2,20 +2,13 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 
-import MisPresupuestosScreen from "./MisPresupuestosScreen";
-import CategoriasScreen from "./CategoriasScreen";
-
-const Drawer = createDrawerNavigator();
-
 const HomeScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
-      {/* Encabezado */}
       <View style={styles.header}>
         <Text style={styles.headerText}>Bienvenido a la App</Text>
       </View>
 
-      {/* Contenido principal */}
       <View style={styles.content}>
         <Text style={styles.welcomeText}>
           ¡Hola! Esta es la pantalla de inicio.

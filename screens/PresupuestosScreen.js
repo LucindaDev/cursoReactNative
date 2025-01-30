@@ -13,14 +13,9 @@ import Icon from "react-native-vector-icons/FontAwesome";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import * as SQLite from "expo-sqlite";
 import { useFocusEffect } from "@react-navigation/native";
-import { createDrawerNavigator } from "@react-navigation/drawer";
 
 
-import CategoriasScreen from "./CategoriasScreen";
-
-const Drawer = createDrawerNavigator();
-
-export default function MisPresupuestos({ navigation }) {
+export default function PresupuestosScreen({ navigation }) {
   const [presupuestos, setPresupuestos] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [nuevoPresupuesto, setNuevoPresupuesto] = useState({
@@ -296,10 +291,3 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 });
-
-// Drawer Screen
-<Drawer.Screen
-  name="Categorias"
-  component={CategoriasScreen}
-  options={{ title: "Categorías" }}
-/>

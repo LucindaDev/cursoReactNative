@@ -1,22 +1,31 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-// import { SQLiteProvider, openDatabaseAsync, execAsync } from "expo-sqlite";
 import { SQLiteProvider } from "expo-sqlite";
-import * as SQLite from "expo-sqlite";
-import { createDrawerNavigator } from "@react-navigation/drawer";
+import { Ionicons } from "@expo/vector-icons";
+import { createStackNavigator } from "@react-navigation/stack";
 
-// Crear el Tab Navigator
-const Tab = createBottomTabNavigator();
-
-// Crear el Drawer Navigator
-const Drawer = createDrawerNavigator();
-
-// Importar los componentes de las pantallas
+// Importar las pantallas
 import HomeScreen from "./screens/HomeScreen";
 import MenuScreen from "./screens/MenuScreen";
 import GastosScreen from "./screens/GastosScreen";
+import PresupuestosScreen from "./screens/PresupuestosScreen";
+
+const Tab = createBottomTabNavigator();
+const MenuStack = createStackNavigator();
+
+function MenuStackScreen() {
+  return (
+    <MenuStack.Navigator>
+      <MenuStack.Screen name="Menu" component={MenuScreen} />
+      <MenuStack.Screen
+        name="PresupuestosScreen"
+        component={PresupuestosScreen}
+        options={{ title: "Presupuestos" }}
+      />
+    </MenuStack.Navigator>
+  );
+}
 
 export default function App() {
   // Abrir o crear la base de datos
@@ -49,21 +58,32 @@ export default function App() {
 
   return (
     <SQLiteProvider databaseName="presupuestosdb.db" onInit={crearDbsiNoExiste}>
-      <NavigationContainer>
-        <Tab.Navigator initialRouteName="Inicio">
-          <Tab.Screen name="Inicio" component={HomeScreen} />
-          <Tab.Screen name="Menú" component={MenuScreen} />
-          <Tab.Screen name="Gastos" component={GastosScreen} />
-        </Tab.Navigator>
-      </NavigationContainer>
+    <NavigationContainer>
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          tabBarIcon: ({ focused, color, size }) => {
+            let iconName;
+
+            if (route.name === "Inicio") {
+              iconName = focused ? "home" : "home-outline";
+            } else if (route.name === "Menu") {
+              iconName = focused ? "menu" : "menu-outline";
+            } else if (route.name === "Gastos") {
+              iconName = focused ? "settings" : "settings-outline";
+            }
+
+            return <Ionicons name={iconName} size={size} color={color} />;
+          },
+          tabBarActiveTintColor: "tomato",
+          tabBarInactiveTintColor: "gray",
+          headerShown: false, 
+        })}
+      >
+        <Tab.Screen name="Inicio" component={HomeScreen} />
+        <Tab.Screen name="Menu" component={MenuStackScreen} />
+        <Tab.Screen name="Gastos" component={GastosScreen} />
+      </Tab.Navigator>
+    </NavigationContainer>
     </SQLiteProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-});
