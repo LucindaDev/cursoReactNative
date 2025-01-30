@@ -3,26 +3,24 @@ import { View, Text, StyleSheet } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 // import { SQLiteProvider, openDatabaseAsync, execAsync } from "expo-sqlite";
-import { SQLiteProvider } from 'expo-sqlite';
-import * as SQLite from 'expo-sqlite';
+import { SQLiteProvider } from "expo-sqlite";
+import * as SQLite from "expo-sqlite";
+import { createDrawerNavigator } from "@react-navigation/drawer";
 
 // Crear el Tab Navigator
 const Tab = createBottomTabNavigator();
 
-// Importar los componentes de las pantallas
-import MisPresupuestosScreen from "./screens/MisPresupuestosScreen";
+// Crear el Drawer Navigator
+const Drawer = createDrawerNavigator();
 
-function GastosScreen() {
-  return (
-    <View style={styles.screen}>
-      <Text>Gastos</Text>
-    </View>
-  );
-}
+// Importar los componentes de las pantallas
+import HomeScreen from "./screens/HomeScreen";
+import MenuScreen from "./screens/MenuScreen";
+import GastosScreen from "./screens/GastosScreen";
 
 export default function App() {
   // Abrir o crear la base de datos
-  
+
   const crearDbsiNoExiste = async (db) => {
     // Crear la tabla de presupuestos si no existe
     await db.execAsync(`
@@ -52,11 +50,9 @@ export default function App() {
   return (
     <SQLiteProvider databaseName="presupuestosdb.db" onInit={crearDbsiNoExiste}>
       <NavigationContainer>
-        <Tab.Navigator>
-          <Tab.Screen
-            name="Mis Presupuestos"
-            component={MisPresupuestosScreen}
-          />
+        <Tab.Navigator initialRouteName="Inicio">
+          <Tab.Screen name="Inicio" component={HomeScreen} />
+          <Tab.Screen name="Menú" component={MenuScreen} />
           <Tab.Screen name="Gastos" component={GastosScreen} />
         </Tab.Navigator>
       </NavigationContainer>

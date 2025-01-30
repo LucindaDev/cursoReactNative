@@ -13,6 +13,12 @@ import Icon from "react-native-vector-icons/FontAwesome";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import * as SQLite from "expo-sqlite";
 import { useFocusEffect } from "@react-navigation/native";
+import { createDrawerNavigator } from "@react-navigation/drawer";
+
+
+import CategoriasScreen from "./CategoriasScreen";
+
+const Drawer = createDrawerNavigator();
 
 export default function MisPresupuestos({ navigation }) {
   const [presupuestos, setPresupuestos] = useState([]);
@@ -26,10 +32,10 @@ export default function MisPresupuestos({ navigation }) {
 
   const db = SQLite.useSQLiteContext();
   
+  
   const obtenerPresupuestos = async () => {
     try {
       const result = await db.getAllAsync("SELECT id, nombre, ingreso, categorias FROM presupuestos");
-      console.log("obtenerPresupuestos", result);
       setPresupuestos(result);
     } catch (error) {
       console.error("Error al obtener presupuestos:", error);
@@ -290,3 +296,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 });
+
+// Drawer Screen
+<Drawer.Screen
+  name="Categorias"
+  component={CategoriasScreen}
+  options={{ title: "Categorías" }}
+/>
