@@ -8,6 +8,8 @@ import {
   TextInput,
   StyleSheet,
   Alert,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
 import Icon from "react-native-vector-icons/FontAwesome";
@@ -130,52 +132,64 @@ export default function PresupuestosScreen({ navigation }) {
         <Icon name="plus-circle" size={50} color="black" />
       </TouchableOpacity>
 
+      {/* Modal para agregar/editar presupuesto */}
+
       <Modal visible={modalVisible} animationType="slide">
-        <View style={styles.modalContainer}>
-          <TextInput
-            placeholder="Nombre"
-            placeholderTextColor={"#666"}
-            style={styles.input}
-            value={nuevoPresupuesto.nombre}
-            onChangeText={(text) =>
-              setNuevoPresupuesto({ ...nuevoPresupuesto, nombre: text })
-            }
-          />
-          <TextInput
-            placeholder="Ingreso Mensual"
-            placeholderTextColor={"#666"}
-            style={styles.input}
-            keyboardType="numeric"
-            value={nuevoPresupuesto.ingreso}
-            onChangeText={(text) =>
-              setNuevoPresupuesto({ ...nuevoPresupuesto, ingreso: text })
-            }
-          />
-          <DropDownPicker
-            open={open}
-            value={selectedCategorias}
-            items={categorias}
-            setOpen={setOpen}
-            setValue={setSelectedCategorias}
-            setItems={setCategorias}
-            multiple={true}
-            mode="BADGE"
-            placeholder="Selecciona categorías"
-            placeholderStyle={{ color: "#666" }}
-            style={styles.dropdown}
-          />
-          <View style={styles.botonContainer}>
-            <TouchableOpacity style={styles.botonGuardar} onPress={btnGuardar}>
-              <Text style={styles.botonTexto}>Guardar</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.botonCancelar}
-              onPress={() => setModalVisible(false)}
-            >
-              <Text style={styles.botonTexto}>Cancelar</Text>
-            </TouchableOpacity>
+        <TouchableWithoutFeedback
+          onPress={() => {
+            Keyboard.dismiss(); // Ocultar teclado
+            setOpen(false); // Cerrar dropdown
+          }}
+        >
+          <View style={styles.modalContainer}>
+            <TextInput
+              placeholder="Nombre"
+              placeholderTextColor={"#666"}
+              style={styles.input}
+              value={nuevoPresupuesto.nombre}
+              onChangeText={(text) =>
+                setNuevoPresupuesto({ ...nuevoPresupuesto, nombre: text })
+              }
+            />
+            <TextInput
+              placeholder="Ingreso Mensual"
+              placeholderTextColor={"#666"}
+              style={styles.input}
+              keyboardType="numeric"
+              value={nuevoPresupuesto.ingreso}
+              onChangeText={(text) =>
+                setNuevoPresupuesto({ ...nuevoPresupuesto, ingreso: text })
+              }
+            />
+            <DropDownPicker
+              open={open}
+              value={selectedCategorias}
+              items={categorias}
+              setOpen={setOpen}
+              setValue={setSelectedCategorias}
+              setItems={setCategorias}
+              multiple={true}
+              mode="BADGE"
+              placeholder="Selecciona categorías"
+              placeholderStyle={{ color: "#666" }}
+              style={styles.dropdown}
+            />
+            <View style={styles.botonContainer}>
+              <TouchableOpacity
+                style={styles.botonGuardar}
+                onPress={btnGuardar}
+              >
+                <Text style={styles.botonTexto}>Guardar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.botonCancelar}
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={styles.botonTexto}>Cancelar</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </Modal>
     </View>
   );
