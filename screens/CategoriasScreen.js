@@ -8,6 +8,8 @@ import {
   TextInput,
   StyleSheet,
   Alert,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
@@ -22,7 +24,6 @@ const CategoriasScreen = () => {
     nombre: "",
     monto: "",
   });
-
 
   const db = SQLite.useSQLiteContext();
 
@@ -46,10 +47,7 @@ const CategoriasScreen = () => {
 
   // Agregar un categoria a la base de datos
   const btnGuardar = async () => {
-    if (
-      !nuevaCategoria.nombre ||
-      !nuevaCategoria.monto
-    ) {
+    if (!nuevaCategoria.nombre || !nuevaCategoria.monto) {
       Alert.alert("Error", "Por favor, completa todos los campos.");
       return;
     }
@@ -58,20 +56,13 @@ const CategoriasScreen = () => {
       if (nuevaCategoria.id) {
         await db.runAsync(
           "UPDATE categorias SET nombre = ?, monto = ? WHERE id = ?",
-          [
-            nuevaCategoria.nombre,
-            nuevaCategoria.monto,
-            nuevaCategoria.id,
-          ]
+          [nuevaCategoria.nombre, nuevaCategoria.monto, nuevaCategoria.id]
         );
         console.log("Categoria actualizada correctamente");
       } else {
         await db.runAsync(
           "INSERT INTO categorias (nombre, monto) VALUES (?, ?)",
-          [
-            nuevaCategoria.nombre,
-            nuevaCategoria.monto,
-          ]
+          [nuevaCategoria.nombre, nuevaCategoria.monto]
         );
         console.log("Categoria guardado correctamente");
       }
@@ -170,45 +161,51 @@ const CategoriasScreen = () => {
 
       {/* Modal de creación */}
       <Modal visible={modalVisible} animationType="slide">
-        <View style={styles.modalContainer}>
-          <TextInput
-            placeholder="Nombre"
-            placeholderTextColor={"#666"}
-            style={styles.input}
-            value={nuevaCategoria.nombre}
-            onChangeText={(text) =>
-              setNuevaCategoria({ ...nuevaCategoria, nombre: text })
-            }
-          />
-          <TextInput
-            placeholder="Monto"
-            placeholderTextColor={"#666"}
-            style={styles.input}
-            keyboardType="numeric"
-            value={nuevaCategoria.monto.toString()}
-            onChangeText={(text) =>
-              setNuevaCategoria({ ...nuevaCategoria, monto: text })
-            }
-          />
-          <View style={styles.botonContainer}>
-            <TouchableOpacity style={styles.botonGuardar} onPress={btnGuardar}>
-              <Text style={styles.botonTexto}>Guardar</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.botonCancelar}
-              onPress={() => {
-                setModalVisible(false);
-                setNuevaCategoria({
-                  id: null,
-                  nombre: "",
-                  monto: "",
-                });
-              }}
-            >
-              <Text style={styles.botonTexto}>Cancelar</Text>
-            </TouchableOpacity>
+        <TouchableWithoutFeedback
+          onPress={() => {
+            Keyboard.dismiss(); // Ocultar teclado
+          }}
+        >
+          <View style={styles.modalContainer}>
+            <TextInput
+              placeholder="Nombre"
+              placeholderTextColor={"#666"}
+              style={styles.input}
+              value={nuevaCategoria.nombre}
+              onChangeText={(text) =>
+                setNuevaCategoria({ ...nuevaCategoria, nombre: text })
+              }
+            />
+            <TextInput
+              placeholder="Monto"
+              placeholderTextColor={"#666"}
+              style={styles.input}
+              keyboardType="numeric"
+              value={nuevaCategoria.monto.toString()}
+              onChangeText={(text) =>
+                setNuevaCategoria({ ...nuevaCategoria, monto: text })
+              }
+            />
+            <View style={styles.botonContainer}>
+              <TouchableOpacity style={styles.botonGuardar} onPress={btnGuardar}>
+                <Text style={styles.botonTexto}>Guardar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.botonCancelar}
+                onPress={() => {
+                  setModalVisible(false);
+                  setNuevaCategoria({
+                    id: null,
+                    nombre: "",
+                    monto: "",
+                  });
+                }}
+              >
+                <Text style={styles.botonTexto}>Cancelar</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </Modal>
     </View>
   );
