@@ -1,26 +1,30 @@
+import React from "react";
 import { createStackNavigator } from "@react-navigation/stack";
+import MenuScreen from "./screens/MenuScreen";
 import PresupuestosScreen from "./screens/PresupuestosScreen";
+import CategoriasScreen from "./screens/CategoriasScreen";
 
-const Stack = createStackNavigator();
+const MenuStack = createStackNavigator();
 
-function MenuStackScreen() {
+export default function MenuStackScreen() {
   return (
-    <Stack.Navigator>
-      {/* Pantalla principal del menú */}
-      <Stack.Screen
+    <MenuStack.Navigator>
+      <MenuStack.Screen
         name="Menu"
         component={MenuScreen}
-        screenOptions={{
-        headerShown: false,
-        }}
+        options={{ headerShown: false }}
       />
-
-      <Stack.Screen name="Presupuestos" component={PresupuestosScreen} />
-      <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
-      <Stack.Screen name="CategoriesScreen" component={CategoriesScreen} />
-      <Stack.Screen name="SettingsScreen" component={SettingsScreen} />
-      <Stack.Screen name="HelpScreen" component={HelpScreen} />
-      <Stack.Screen name="ShareScreen" component={ShareScreen} />
-    </Stack.Navigator>
+      <MenuStack.Screen
+        name="PresupuestosScreen"
+        component={PresupuestosScreen}
+        options={{ title: "Presupuestos" }}
+      />
+      <MenuStack.Screen
+        name="CategoriasScreen"
+        component={CategoriasScreen}
+        options={{ title: "Categorías" }}
+      />
+    </MenuStack.Navigator>
   );
 }
+

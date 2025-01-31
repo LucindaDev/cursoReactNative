@@ -5,7 +5,7 @@ const MenuScreen = ({ navigation }) => {
   const options = [
     { name: "Mi perfil", screen: "Profile" }, // Nombre de la pantalla a la que redirige
     { name: "Presupuestos", screen: "PresupuestosScreen" },
-    { name: "Categorías", screen: "Categories" },
+    { name: "Categorías", screen: "CategoriasScreen" },
     { name: "Configuración", screen: "Settings" },
     { name: "Ayuda", screen: "Help" },
     { name: "Compartir", screen: "Share" },
