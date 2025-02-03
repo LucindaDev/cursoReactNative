@@ -43,7 +43,7 @@ export default function App() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       categoria_id INTEGER NOT NULL,
       presupuesto_id INTEGER NOT NULL,
-      nombre TEXT NOT NULL,
+      concepto TEXT NOT NULL,
       monto TEXT NOT NULL,
       descripcion TEXT,
       fecha TEXT NOT NULL CHECK (fecha LIKE '__/__/____'),
@@ -51,6 +51,20 @@ export default function App() {
       FOREIGN KEY (presupuesto_id) REFERENCES presupuestos(id)
       );
     `);
+
+    //Crear tabla presupuesto_categoria si no existe
+    await db.execAsync(`
+      PRAGMA journal_mode = WAL;
+      CREATE TABLE IF NOT EXISTS presupuesto_categoria (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        presupuesto_id INTEGER NOT NULL,
+        categoria_id INTEGER NOT NULL,
+        monto REAL NOT NULL,
+        FOREIGN KEY (presupuesto_id) REFERENCES presupuestos(id),
+        FOREIGN KEY (categoria_id) REFERENCES categorias(id)
+      );
+    `);
+
   };
 
   return (
