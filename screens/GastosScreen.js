@@ -15,19 +15,20 @@ import DropDownPicker from "react-native-dropdown-picker";
 import Icon from "react-native-vector-icons/FontAwesome";
 import * as SQLite from "expo-sqlite";
 import { useFocusEffect } from "@react-navigation/native";
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 export default function GastosScreen() {
   const [gastos, setGastos] = useState([]);
   const [categorias, setCategorias] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [nuevoGasto, setNuevoGasto] = useState({
-    nombre: "",
+    id: null,
+    concepto: "",
     monto: "",
-    lugarCompra: "",
-    metodoPago: "",
+    lugar_compra: "",
+    metodo_pago: "Efectivo",
     descripcion: "",
-    fecha: new Date(), // Aseguramos que sea una fecha válida
+    fecha: new Date(),
     categoria: null,
     recurrente: false,
     frecuencia: "",
@@ -37,7 +38,7 @@ export default function GastosScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [openMetodoPago, setOpenMetodoPago] = useState(false);
   const [openCategoria, setOpenCategoria] = useState(false);
-  const [openFrecuencia, setOpenFrecuencia] = useState(false); // Estado para el Dropdown de frecuencia
+  const [openFrecuencia, setOpenFrecuencia] = useState(false);
 
   const [metodoPagoOptions] = useState([
     { label: "Efectivo", value: "Efectivo" },
@@ -55,7 +56,9 @@ export default function GastosScreen() {
 
   const obtenerGastos = async () => {
     try {
-      const result = await db.getAllAsync("SELECT * FROM gastos");
+      const result = await db.getAllAsync(
+        "SELECT id, concepto, monto, metodo_pago, descripcion, fecha, unidad_frecuencia, frecuencia, categoria_id FROM gastos"
+      );
       setGastos(result);
     } catch (error) {
       console.error("Error al obtener gastos:", error);
@@ -71,14 +74,166 @@ export default function GastosScreen() {
   const obtenerCategorias = async () => {
     try {
       const result = await db.getAllAsync("SELECT id, nombre FROM categorias");
-      const formattedCategories = result.map((cat) => ({
-        label: cat.nombre,
-        value: cat.id,
-      }));
-      setCategorias(formattedCategories);
+      if (result.length > 0) {
+        const formattedCategories = result.map((cat) => ({
+          label: cat.nombre,
+          value: cat.id.toString(),
+        }));
+        setCategorias(formattedCategories);
+      } else {
+        setCategorias([]);
+      }
     } catch (error) {
       console.error("Error al obtener categorías:", error);
+      setCategorias([]);
     }
+  };
+
+  const btnGuardar = async () => {
+    const formatDateToDisplay = (date) => {
+      const day = date.getDate().toString().padStart(2, "0");
+      const month = (date.getMonth() + 1).toString().padStart(2, "0");
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
+    };
+
+    const fechaDisplay = formatDateToDisplay(nuevoGasto.fecha);
+    const esRecurrente = nuevoGasto.recurrente ? 1 : 0;
+
+    if (!nuevoGasto.concepto || !nuevoGasto.monto || !nuevoGasto.categoria) {
+      Alert.alert(
+        "Error",
+        "Por favor, completa todos los campos obligatorios."
+      );
+      return;
+    }
+
+    try {
+      if (nuevoGasto.id) {
+        await db.runAsync(
+          `UPDATE gastos SET 
+            concepto = ?, 
+            monto = ?, 
+            metodo_pago = ?, 
+            lugar_compra = ?, 
+            descripcion = ?, 
+            fecha = ?,
+            categoria_id = ?, 
+            recurrente = ?, 
+            frecuencia = ?, 
+            unidad_frecuencia = ? 
+          WHERE id = ?`,
+          [
+            nuevoGasto.concepto,
+            nuevoGasto.monto,
+            nuevoGasto.metodo_pago,
+            nuevoGasto.lugar_compra,
+            nuevoGasto.descripcion,
+            fechaDisplay,
+            nuevoGasto.categoria,
+            esRecurrente,
+            nuevoGasto.frecuencia || null,
+            nuevoGasto.unidadFrecuencia || null,
+            nuevoGasto.id,
+          ]
+        );
+      } else {
+        await db.runAsync(
+          `INSERT INTO gastos (
+            concepto, 
+            monto, 
+            metodo_pago, 
+            lugar_compra, 
+            descripcion, 
+            fecha,
+            categoria_id, 
+            recurrente, 
+            frecuencia, 
+            unidad_frecuencia
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            nuevoGasto.concepto,
+            nuevoGasto.monto,
+            nuevoGasto.metodo_pago,
+            nuevoGasto.lugar_compra,
+            nuevoGasto.descripcion,
+            fechaDisplay,
+            nuevoGasto.categoria,
+            esRecurrente,
+            nuevoGasto.frecuencia || null,
+            nuevoGasto.unidadFrecuencia || null,
+          ]
+        );
+      }
+
+      setModalVisible(false);
+      setNuevoGasto({
+        ...nuevoGasto,
+        id: null,
+        concepto: "",
+        monto: "",
+        lugar_compra: "",
+        metodo_pago: "Efectivo",
+        descripcion: "",
+        fecha: new Date(),
+        categoria: null,
+        recurrente: false,
+        frecuencia: "",
+        unidadFrecuencia: "",
+      });
+      await obtenerGastos();
+    } catch (error) {
+      console.error("Error al guardar gasto:", error);
+      Alert.alert("Error", "No se pudo guardar el gasto: " + error.message);
+    }
+  };
+
+  const eliminarGasto = async (id) => {
+    Alert.alert(
+      "Eliminar Gasto",
+      "¿Estás seguro que deseas eliminar este gasto?",
+      [
+        {
+          text: "Cancelar",
+          style: "cancel",
+        },
+        {
+          text: "Eliminar",
+          onPress: async () => {
+            try {
+              await db.runAsync("DELETE FROM gastos WHERE id = ?", [id]);
+              console.log("Gasto eliminado correctamente");
+              await obtenerCategorias();
+            } catch (error) {
+              console.error("Error al eliminar gasto:", error);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const editarGasto = async (id) => {
+    const gasto = gastos.find((p) => p.id === id);
+    if (!gasto) {
+      Alert.alert("Error", "No se encontró el gasto seleccionado.");
+      return;
+    }
+
+    setModalVisible(true);
+    setNuevoGasto({
+      id: gasto.id,
+      concepto: gasto.concepto,
+      monto: gasto.monto,
+      lugar_compra: gasto.lugar_compra,
+      metodo_pago: gasto.metodo_pago,
+      descripcion: gasto.descripcion,
+      fecha: gasto.fecha ? new Date(gasto.fecha) : new Date(), // Convierte a Date si es necesario
+      categoria: gasto.categoria,
+      recurrente: gasto.recurrente,
+      frecuencia: gasto.frecuencia,
+      unidadFrecuencia: gasto.unidadFrecuencia,
+    });
   };
 
   useFocusEffect(
@@ -88,66 +243,44 @@ export default function GastosScreen() {
     }, [])
   );
 
-  const btnGuardar = async () => {
-    if (
-      !nuevoGasto.nombre ||
-      !nuevoGasto.monto ||
-      !nuevoGasto.categoria ||
-      !nuevoGasto.metodoPago ||
-      !nuevoGasto.fecha
-    ) {
-      Alert.alert(
-        "Error",
-        "Por favor, completa todos los campos obligatorios."
-      );
-      return;
-    }
-    try {
-      // Aquí iría la lógica para guardar el gasto, incluyendo los campos de frecuencia si es recurrente
-      await db.runAsync(
-        "INSERT INTO gastos (nombre, monto, metodoPago, lugarCompra, descripcion, fecha, categoria, recurrente, frecuencia, unidadFrecuencia) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        [
-          nuevoGasto.nombre,
-          nuevoGasto.monto,
-          nuevoGasto.metodoPago,
-          nuevoGasto.lugarCompra,
-          nuevoGasto.descripcion,
-          nuevoGasto.fecha,
-          nuevoGasto.categoria,
-          nuevoGasto.recurrente,
-          nuevoGasto.frecuencia,
-          nuevoGasto.unidadFrecuencia,
-        ]
-      );
-      setModalVisible(false);
-      setNuevoGasto({
-        nombre: "",
-        monto: "",
-        lugarCompra: "",
-        metodoPago: "",
-        descripcion: "",
-        fecha: "",
-        categoria: null,
-        recurrente: false,
-        frecuencia: "",
-        unidadFrecuencia: "",
-      });
-      await obtenerGastos();
-    } catch (error) {
-      console.error("Error al guardar gasto:", error);
-      Alert.alert("Error", "No se pudo guardar el gasto.");
-    }
-  };
-
   return (
-    <View style={styles.container}>
+    <View style={{ flex: 1, padding: 16 }}>
       <FlatList
         data={gastos}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <View style={styles.gastoItem}>
-            <Text style={styles.nombre}>{item.nombre}</Text>
-            <Text style={styles.monto}>${item.monto}</Text>
+            <TouchableOpacity style={{ flex: 1 }}>
+              <Text style={styles.concepto}>{item.concepto}</Text>
+              <Text style={styles.monto}>Monto: ${item.monto}</Text>
+              <Text style={styles.metodo_pago}>
+                Método de pago: {item.metodo_pago}
+              </Text>
+              <Text style={styles.fecha}>Fecha: {item.fecha}</Text>
+              <Text style={styles.frecuencia}>
+                {item.unidad_frecuencia && item.frecuencia
+                  ? `Cada: ${item.frecuencia} ${frecuenciaOptions.find((option) => option.value === item.unidad_frecuencia)?.label}`
+                  : ""}
+              </Text>
+            </TouchableOpacity>
+            <View style={styles.iconosContainer}>
+              <TouchableOpacity onPress={() => editarGasto(item.id)}>
+                <Icon
+                  name="pencil"
+                  size={25}
+                  color="#007bff"
+                  style={styles.icono}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => eliminarGasto(item.id)}>
+                <Icon
+                  name="trash"
+                  size={25}
+                  color="#d9534f"
+                  style={styles.icono}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
         )}
       />
@@ -162,29 +295,32 @@ export default function GastosScreen() {
       <Modal visible={modalVisible} animationType="slide">
         <TouchableWithoutFeedback
           onPress={() => {
-            Keyboard.dismiss(); // Ocultar teclado
-            setOpenMetodoPago(false); // Cerrar dropdown metodoPago
-            setOpenCategoria(false); // Cerrar dropdown categoria
-            setOpenFrecuencia(false); // Cerrar dropdown frecuencia
+            Keyboard.dismiss();
+            setOpenMetodoPago(false);
+            setOpenCategoria(false);
+            setOpenFrecuencia(false);
           }}
         >
           <View style={styles.modalContainer}>
             <TextInput
-              placeholder="Nombre del gasto"
+              placeholder="Concepto"
               placeholderTextColor={"#666"}
               style={styles.input}
-              value={nuevoGasto.nombre}
+              value={nuevoGasto.concepto}
               onChangeText={(text) =>
-                setNuevoGasto({ ...nuevoGasto, nombre: text })
+                setNuevoGasto({ ...nuevoGasto, concepto: text })
               }
             />
             <DropDownPicker
               open={openMetodoPago}
-              value={nuevoGasto.metodoPago}
+              value={nuevoGasto.metodo_pago}
               items={metodoPagoOptions}
               setOpen={setOpenMetodoPago}
-              setValue={(value) =>
-                setNuevoGasto({ ...nuevoGasto, metodoPago: value })
+              setValue={(callback) =>
+                setNuevoGasto((prevState) => ({
+                  ...prevState,
+                  metodo_pago: callback(prevState.metodo_pago),
+                }))
               }
               placeholder="Método de pago"
               placeholderStyle={{ color: "#666" }}
@@ -197,7 +333,7 @@ export default function GastosScreen() {
               placeholderTextColor={"#666"}
               style={styles.input}
               keyboardType="numeric"
-              value={nuevoGasto.monto}
+              value={nuevoGasto.monto.toString()}
               onChangeText={(text) =>
                 setNuevoGasto({ ...nuevoGasto, monto: text })
               }
@@ -206,9 +342,9 @@ export default function GastosScreen() {
               placeholder="Lugar de compra"
               placeholderTextColor={"#666"}
               style={styles.input}
-              value={nuevoGasto.lugarCompra}
+              value={nuevoGasto.lugar_compra}
               onChangeText={(text) =>
-                setNuevoGasto({ ...nuevoGasto, lugarCompra: text })
+                setNuevoGasto({ ...nuevoGasto, lugar_compra: text })
               }
             />
             <TextInput
@@ -225,9 +361,7 @@ export default function GastosScreen() {
               onPress={() => setShowDatePicker(true)}
             >
               <Text style={styles.dateText}>
-                {nuevoGasto.fecha instanceof Date
-                  ? nuevoGasto.fecha.toLocaleDateString()
-                  : "Selecciona una fecha"}
+                {nuevoGasto.fecha.toLocaleDateString()}
               </Text>
               <Icon name="calendar" size={20} color="black" />
             </TouchableOpacity>
@@ -245,17 +379,19 @@ export default function GastosScreen() {
               value={nuevoGasto.categoria}
               items={categorias}
               setOpen={setOpenCategoria}
-              setValue={(value) =>
-                setNuevoGasto({ ...nuevoGasto, categoria: value })
+              setValue={(callback) =>
+                setNuevoGasto((prevState) => ({
+                  ...prevState,
+                  categoria: callback(prevState.categoria),
+                }))
               }
-              placeholder="Categoría"
+              placeholder="Selecciona una categoría"
               placeholderStyle={{ color: "#666" }}
               style={styles.dropdown}
-              zIndex={4000}
-              zIndexInverse={900}
+              zIndex={3000}
+              zIndexInverse={1000}
             />
 
-            {/* Checkbox para gasto recurrente */}
             <View style={styles.checkboxContainer}>
               <TouchableOpacity
                 onPress={() =>
@@ -264,13 +400,19 @@ export default function GastosScreen() {
                     recurrente: !nuevoGasto.recurrente,
                   })
                 }
+                style={styles.checkboxTouchable} // Estilo para el TouchableOpacity
               >
-                <Icon
-                  name={nuevoGasto.recurrente ? "check-square" : "square-o"}
-                  size={20}
-                  color="black"
-                />
-                <Text> Marcar como gasto recurrente</Text>
+                <View style={styles.iconTextContainer}>
+                  {/* Contenedor para ícono y texto */}
+                  <Icon
+                    name={nuevoGasto.recurrente ? "check-square" : "square-o"}
+                    size={20}
+                    color="black"
+                  />
+                  <Text style={styles.checkboxText}>
+                    Marcar como gasto recurrente
+                  </Text>
+                </View>
               </TouchableOpacity>
             </View>
 
@@ -292,13 +434,16 @@ export default function GastosScreen() {
                   value={nuevoGasto.unidadFrecuencia}
                   items={frecuenciaOptions}
                   setOpen={setOpenFrecuencia}
-                  setValue={(value) =>
-                    setNuevoGasto({ ...nuevoGasto, unidadFrecuencia: value })
+                  setValue={(callback) =>
+                    setNuevoGasto((prevState) => ({
+                      ...prevState,
+                      unidadFrecuencia: callback(prevState.unidadFrecuencia),
+                    }))
                   }
                   placeholder="Unidad de frecuencia"
                   placeholderStyle={{ color: "#666" }}
                   style={styles.dropdown}
-                  zIndex={3000}
+                  zIndex={2000}
                   zIndexInverse={900}
                 />
               </>
@@ -306,16 +451,16 @@ export default function GastosScreen() {
 
             <View style={styles.botonContainer}>
               <TouchableOpacity
-                style={styles.botonGuardar}
-                onPress={btnGuardar}
-              >
-                <Text style={styles.botonTexto}>Guardar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
                 style={styles.botonCancelar}
                 onPress={() => setModalVisible(false)}
               >
                 <Text style={styles.botonTexto}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.botonGuardar}
+                onPress={btnGuardar}
+              >
+                <Text style={styles.botonTexto}>Guardar</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -330,16 +475,28 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     padding: 16,
-    backgroundColor: "#f9f9f9",
     marginVertical: 8,
+    backgroundColor: "#f9f9f9",
     borderRadius: 8,
   },
-  nombre: { fontSize: 16, fontWeight: "bold" },
+  concepto: { fontSize: 16, fontWeight: "bold" },
   monto: { fontSize: 14, color: "#555" },
+  metodo_pago: { fontSize: 14, color: "#555" },
+  fecha: { fontSize: 14, color: "#555" },
+  frecuencia: { fontSize: 14, color: "#555" },
+  iconosContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 15,
+    marginRight: 9,
+  },
   botonFlotante: {
-    position: "relative",
-    top: 747,
-    left: 355,
+    position: "absolute",
+    bottom: 16,
+    right: 16,
+    borderRadius: 28,
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalContainer: { flex: 1, justifyContent: "center", padding: 16 },
   input: {
@@ -350,7 +507,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   dropdown: {
-    marginBottom: 20,
+    marginVertical: 8,
   },
   dateInput: {
     flexDirection: "row",
@@ -375,8 +532,8 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 8,
     flex: 1,
-    marginRight: 8,
     alignItems: "center",
+    marginLeft: 8,
   },
   botonCancelar: {
     backgroundColor: "#d9534f",
@@ -386,14 +543,25 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   botonTexto: { color: "white", fontSize: 18 },
-  checkboxContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: 10,
-  },
   inputLabel: {
     fontSize: 16,
     color: "#333",
     marginVertical: 8,
+    marginRight: 8,
+  },
+  checkboxContainer: {
+    marginVertical: 10, // Espacio vertical alrededor del contenedor
+  },
+  checkboxTouchable: {
+    flexDirection: "row", // Alinear ícono y texto en la misma línea
+    alignItems: "center", // Centrar verticalmente
+  },
+  iconTextContainer: {
+    flexDirection: "row", // Alinear ícono y texto en la misma línea
+    alignItems: "center", // Centrar verticalmente
+  },
+  checkboxText: {
+    marginLeft: 8, // Espacio entre el ícono y el texto
+    fontSize: 16, // Tamaño del texto
   },
 });

@@ -42,11 +42,16 @@ export default function App() {
       CREATE TABLE IF NOT EXISTS gastos (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       categoria_id INTEGER NOT NULL,
-      presupuesto_id INTEGER NOT NULL,
+      presupuesto_id INTEGER,
       concepto TEXT NOT NULL,
       monto TEXT NOT NULL,
+      metodo_pago TEXT NOT NULL,
+      lugar_compra TEXT,
       descripcion TEXT,
-      fecha TEXT NOT NULL CHECK (fecha LIKE '__/__/____'),
+      fecha TEXT CHECK (fecha LIKE '__/__/____'),
+      unidad_frecuencia TEXT,
+      frecuencia TEXT,
+      recurrente BOOLEAN NOT NULL,
       FOREIGN KEY (categoria_id) REFERENCES categorias(id),
       FOREIGN KEY (presupuesto_id) REFERENCES presupuestos(id)
       );
@@ -87,12 +92,11 @@ export default function App() {
             },
             tabBarActiveTintColor: "tomato",
             tabBarInactiveTintColor: "gray",
-            headerShown: false,
           })}
         >
-          <Tab.Screen name="Inicio" component={HomeScreen} />
-          <Tab.Screen name="Menu" component={MenuStackScreen} />
-          <Tab.Screen name="Gastos" component={GastosScreen} />
+          <Tab.Screen name="Inicio" component={HomeScreen} options={{ headerShown: false }} />
+          <Tab.Screen name="Menu" component={MenuStackScreen} options={{ headerShown: false }} />
+          <Tab.Screen name="Gastos" component={GastosScreen} options={{ headerShown: true }} />
         </Tab.Navigator>
       </NavigationContainer>
     </SQLiteProvider>

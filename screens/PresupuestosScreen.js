@@ -117,27 +117,27 @@ export default function PresupuestosScreen({ navigation }) {
   const editarPresupuesto = (id) => {
     setModalVisible(true);
     const presupuesto = presupuestos.find((p) => p.id === id);
-  
+
     // Verificar si hay categorías y mantenerlas como IDs
     const categoriasSeleccionadas = presupuesto.categorias
       ? presupuesto.categorias
           .split(",") // Separar los IDs si están en un string
           .map((catId) => catId.trim()) // Limpiar espacios
       : [];
-  
+
     // Transformar los IDs seleccionados en objetos con 'label' y 'value'
     const categoriasFormateadas = categoriasSeleccionadas.map((catId) => {
       const categoria = categorias.find((cat) => cat.value === catId);
       return categoria || {}; // Devolver la categoría encontrada
     });
-  
+
     setNuevoPresupuesto({
       id: presupuesto.id,
       nombre: presupuesto.nombre,
       ingreso: presupuesto.ingreso.toString(),
       categorias: categoriasSeleccionadas, // Mantener IDs en lugar de nombres
     });
-  
+
     // Establecer las categorías seleccionadas como objetos con 'value' y 'label'
     setSelectedCategorias(categoriasFormateadas); // Asegurar que el dropdown los reconozca
   };
@@ -196,7 +196,7 @@ export default function PresupuestosScreen({ navigation }) {
               <TouchableOpacity onPress={() => editarPresupuesto(item.id)}>
                 <Icon
                   name="pencil"
-                  size={20}
+                  size={25}
                   color="#007bff"
                   style={styles.icono}
                 />
@@ -204,7 +204,7 @@ export default function PresupuestosScreen({ navigation }) {
               <TouchableOpacity onPress={() => eliminarPresupuesto(item.id)}>
                 <Icon
                   name="trash"
-                  size={20}
+                  size={25}
                   color="#d9534f"
                   style={styles.icono}
                 />
@@ -269,16 +269,16 @@ export default function PresupuestosScreen({ navigation }) {
             />
             <View style={styles.botonContainer}>
               <TouchableOpacity
-                style={styles.botonGuardar}
-                onPress={btnGuardar}
-              >
-                <Text style={styles.botonTexto}>Guardar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
                 style={styles.botonCancelar}
                 onPress={() => setModalVisible(false)}
               >
                 <Text style={styles.botonTexto}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.botonGuardar}
+                onPress={btnGuardar}
+              >
+                <Text style={styles.botonTexto}>Guardar</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 8,
     flex: 1,
-    marginRight: 8,
+    marginLeft: 8,
     alignItems: "center",
   },
   botonCancelar: {

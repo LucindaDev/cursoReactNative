@@ -133,7 +133,7 @@ const CategoriasScreen = () => {
               <TouchableOpacity onPress={() => editarCategoria(item.id)}>
                 <Icon
                   name="pencil"
-                  size={20}
+                  size={25}
                   color="#007bff"
                   style={styles.icono}
                 />
@@ -141,7 +141,7 @@ const CategoriasScreen = () => {
               <TouchableOpacity onPress={() => eliminarCategoria(item.id)}>
                 <Icon
                   name="trash"
-                  size={20}
+                  size={25}
                   color="#d9534f"
                   style={styles.icono}
                 />
@@ -187,9 +187,6 @@ const CategoriasScreen = () => {
               }
             />
             <View style={styles.botonContainer}>
-              <TouchableOpacity style={styles.botonGuardar} onPress={btnGuardar}>
-                <Text style={styles.botonTexto}>Guardar</Text>
-              </TouchableOpacity>
               <TouchableOpacity
                 style={styles.botonCancelar}
                 onPress={() => {
@@ -202,6 +199,9 @@ const CategoriasScreen = () => {
                 }}
               >
                 <Text style={styles.botonTexto}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.botonGuardar} onPress={btnGuardar}>
+                <Text style={styles.botonTexto}>Guardar</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -249,7 +249,6 @@ const styles = StyleSheet.create({
   modalContainer: { flex: 1, justifyContent: "center", padding: 16 },
   input: {
     height: 40,
-    borderColor: "#ccc",
     borderWidth: 1,
     borderRadius: 8,
     marginVertical: 8,
@@ -266,7 +265,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     flex: 1,
     alignItems: "center",
-    marginRight: 8,
+    marginLeft: 8,
   },
   botonCancelar: {
     backgroundColor: "#d9534f",
